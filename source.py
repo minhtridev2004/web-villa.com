@@ -1,28 +1,36 @@
+import requests
+from bs4 import BeautifulSoup
 from flask import Flask, request
 import json 
-   
-# Setup flask server
+import webbrowser as wb
 app = Flask(__name__) 
-  
-# Setup url route which will calculate
-# total sum of array.
-@app.route('/arraysum', methods = ['POST']) 
-def sum_of_array(): 
-    data = request.get_json() 
-    print(data)
-  
-    # Data variable contains the 
-    # data from the node server
-    ls = data['array']
-    result = sum(ls) # calculate the sum
-  
-    # Return data in json format 
-    return json.dumps({"result":result})
-   
+def search(oder):
+    url = f"https://www.google.com/search?q={oder}"
+    page = requests.get(url)
+    res =BeautifulSoup(page.content,'html.parser')
+    link = res.find_all('a')
+    ans = []
+    for domain in link:
+        href=domain.get('href')
+        if href.startswith('/url?q='):
+            ans.append(href.replace('/url?q=',''))
+    return ans
 
-@app.route('/hello', methods = ['GET']) 
-def hello_user(): 
-    return json.dumps("hello world!")
-    
+
+
+@app.route('/source', methods = ['POST']) 
+def link_br():
+    data=request.get_json()   
+     
+    query = data['query']
+    links = search(query)
+    res=[]
+    for link in links:
+        res.append(link)
+    return json.dumps(res)
+# tim kiem 1 lien ket 
+"""query = input("nhập nội dung cần tìm: ")
+br = f"https://www.google.com/search?q={query}"
+print(br)"""
 if __name__ == "__main__": 
-    app.run(port=5000)  
+    app.run(port=5000)
